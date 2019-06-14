@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jun  6 11:17:37 2019
-
-@author: Raphaelle Debaecker
-"""
 
 import http.server
 import socketserver
