@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+  <head>
+    <script src="leaflet.js"> // insertion bibliothèque Leaflet : http://leafletjs.com/ </script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <title>Hydrométrie des rivières bretonnes</title>
+
+    <!-- Bootstrap core CSS-->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="leaflet.css" />
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script src="https://unpkg.com/gijgo@1.9.11/js/gijgo.min.js" type="text/javascript"></script>
+
+    <link href="https://unpkg.com/gijgo@1.9.11/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" type="text/css" href="new_style.css"/>
+
+    <style>
+    #map { height: 350px; float:left; margin-left:20px; margin-right:20px;}
+
+    </style>
+
+  </head>
+
+  <body id="page-top" onload="load_data()">
+
+    <h1>
+      Hydrom&eacutetrie des rivi&egraveres bretonnes
+    </h1>
+
+    <div id="wrapper">
+
+      <div id="content-wrapper">
+
+        <div class="container-fluid">
+
+          <div class="row">
+
+            <div class="col card mb-3" id="map"></div>
+
+
+            <div class="col card mb-3">
+              <div class="card-header">Options de sélection</div>
+              <div class="card-body">
+                <label><span>Date de début :</span><input id="datepicker1" width="276" name="date_debut" value=" 09/01/2017 " disabled></label><br>
+                <label><span>Date de fin :</span><input id="datepicker2" width="276" name="date_fin" value=" 10/01/2018 " disabled></label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="multiple_stations">
+                  <label class="form-check-label" for="defaultCheck1">Afficher plusieurs stations sur le même graphique</label>
+                </div>
+              </div>
+              <div class="card-footer small text-muted"></div>
+
+
+              <script>
+                  $('#datepicker1').datepicker({
+                      format: 'dd/mm/yyyy',
+                      value: '01/09/2017',
+                      minDate: '01/09/2017',
+                      maxDate: '29/09/2018',
+                      uiLibrary: 'bootstrap4'
+                  });
+                  $('#datepicker2').datepicker({
+                      format: 'dd/mm/yyyy',
+                      value: '29/09/2018',
+                      minDate: '01/09/2017',
+                      maxDate: '29/09/2018',
+                      uiLibrary: 'bootstrap4'
+                  });
+
+              </script>
+              </div>
+            </div>
+
+            <div class="card mb-3" id="premier">
+
+              <div class="card-header">
+                <h5 align="center" id="titre_graphe">Cliquez sur une station pour afficher les courbes</h5>
+              </div>
+
+              <table>
+                <tr>
+                  <img src="" id="reponse1">
+                </tr>
+
+                <tr>
+                  <img src="" id="reponse2">
+                </tr>
+
+                <tr>
+                  <img src=""id="reponse3">
+                </tr>
+              </table>
+            </div>
+
+
+
+
+
+      </div>
+
+
+
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+
+
+  </body>
+
+</html>
+
+
+
+
+
+
+<script>
+// Creation d'une carte dans la balise div "map", et positionne la vue sur un point donné et un niveau de zoom
+var map = L.map('map').setView([48.15, -2.816], 7);
+// Ajout d'une couche de dalles OpenStreetMap
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+     }).addTo(map);
+
+var liste_regions = [];
+
+function load_data () {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {   // fonction callback
+      // récupération des données renvoyées par le serveur
+    var data = JSON.parse(this.responseText);
+      // boucle sur les enregistrements renvoyés
+      for ( n = 0; n < data.length; n++ ) {
+        // insertion d'un marqueur à la position, attachement d'une popup, capture de l'évènement "clic'
+      L.marker([data[n].lat,data[n].lon]).addTo(map)
+          .bindPopup(data[n].nom)
+      .addEventListener('click',OnMarkerClick)
+      .idreg=data[n].nom;   // propriété personnalisée ajouté au marqueur
+      }
+    };
+    xhr.open('GET','/regions',true);
+    xhr.send();
+}
+
+function OnMarkerClick (e) {
+  var xhr = new XMLHttpRequest();
+  var image1 =  document.querySelector('#reponse1'),
+        legende = document.querySelector('#titre_graphe');
+  var image2 = document.querySelector('#reponse2');
+  var image3 = document.querySelector('#reponse3');
+
+  var date_debut = document.querySelector('#datepicker1').value;
+  var date_fin = document.querySelector('#datepicker2').value;
+  var multiple_stations = document.querySelector('#multiple_stations').checked;
+
+  if (multiple_stations == false){
+    liste_regions.splice(0,liste_regions.length);
+  }
+
+  liste_regions.push(e.target.idreg)
+
+
+
+
+  xhr.onload = function() {   // fonction callback
+      var data = JSON.parse(this.responseText)
+      image1.src = data.img1+'?'+Math.random();;
+      image2.src = data.img2+'?'+Math.random();;
+      image3.src = data.img3+'?'+Math.random();;
+      //image1.alt = data.title1;
+      legende.innerHTML = data.title;
+      };
+    xhr.open('GET','/ponctualite/'+e.target.idreg + '/' + date_debut + '/' + date_fin + '/' + multiple_stations+ '/' + liste_regions ,true);  // on récupère la courbe par un appel au serveur
+    xhr.send();
+}
+</script>
