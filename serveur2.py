@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Jun  6 11:17:37 2019
+
+@author: Raphaelle Debaecker
+"""
 
 import http.server
 import socketserver
@@ -61,6 +66,11 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
       
     # Adresse
     info = urlparse(self.path)
+    
+    
+
+    
+    
     self.path_info = [unquote(v) for v in info.path.split('/')[1:]]
     self.query_string = info.query
     self.params = parse_qs(info.query)
@@ -111,6 +121,7 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
   # On constitue un graphe de ponctualité (en vérifiant que la région appelée existe, 
   # sinon on renvoie 'erreur 404')
   def send_ponctualite(self):
+    print(self.path_info)
     conn = sqlite3.connect('hydrometrie.sqlite')
     c = conn.cursor()
 
@@ -123,11 +134,34 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         print ('Erreur nom')
         self.send_error(404)
         return None
-
+    
     regions_selectionnees = self.path_info[9].split(',')
+    
+    if self.path_info[10]=='true': #cocher afficher toutes les station dans la même rivière
+        station_ref=self.path_info[1]
+        t = (station_ref,)
+        c.execute("SELECT  CdEntiteHydrographique FROM 'StationHydro' WHERE LbStationHydro=?",t)#recherche riviere de la station de reference
+        riv = c.fetchall()
+        
+        riviere= str(riv[0])[2:len(str(riv[0]))-3]
+        riviere=(riviere,)
+        c.execute("SELECT  DISTINCT LbStationHydro FROM 'StationHydro' WHERE CdEntiteHydrographique=?",riviere)#recherche station appartenent a la meme riviere que la station de reference
+        reg_riv= c.fetchall()
+        print('l149 station voisines:',regions)
+        for i in reg_riv:
+            a = str(i)[2:len(str(i))-3]
+           
+            if a != self.path_info[1]:
+                regions_selectionnees.append(a)
+        
+       
+
+    
     regions_selectionnees = list(set(regions_selectionnees))
     regions_selectionnees.sort()
     regions = [(i, 'red') for i in regions_selectionnees if (i,) in reg]
+    
+    print('l162 regions fianle',regions)
 
     donnees = {}
     donnees['xdeb'] = [] # Valeur de débit de x
@@ -152,11 +186,12 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
     c.execute("SELECT DISTINCT nomStat FROM Cache")
     reg2 = c.fetchall()
 
-    print(f"\n {reg2} \n")
+
+    
 
     for l in (regions) :
         if (self.path_info[1],) not in reg2:
-
+           
             c.execute("SELECT * FROM 'hydrometrie_historique' JOIN 'StationHydro' ON CdStationHydroAncienRef = code_hydro WHERE LbStationHydro=? ORDER BY Date",l[:1])
             r = c.fetchall()
 
