@@ -56,6 +56,9 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="" id="multiple_stations">
                   <label class="form-check-label" for="defaultCheck1">Afficher plusieurs stations sur le même graphique</label>
+                  <br>
+                  <input class="form-check-input" type="checkbox" value="" id="meme_riviere">
+                  <label class="form-check-label" for="defaultCheck1">Afficher toutes les stations de la même rivière</label>
                 </div>
               </div>
               <div class="card-footer small text-muted"></div>
@@ -165,6 +168,7 @@ function OnMarkerClick (e) {
   var date_debut = document.querySelector('#datepicker1').value;
   var date_fin = document.querySelector('#datepicker2').value;
   var multiple_stations = document.querySelector('#multiple_stations').checked;
+  var meme_riviere = document.querySelector('#meme_riviere').checked;
 
   if (multiple_stations == false){
     liste_regions.splice(0,liste_regions.length);
@@ -183,7 +187,7 @@ function OnMarkerClick (e) {
       //image1.alt = data.title1;
       legende.innerHTML = data.title;
       };
-    xhr.open('GET','/ponctualite/'+e.target.idreg + '/' + date_debut + '/' + date_fin + '/' + multiple_stations+ '/' + liste_regions ,true);  // on récupère la courbe par un appel au serveur
+    xhr.open('GET','/ponctualite/'+e.target.idreg + '/' + date_debut + '/' + date_fin + '/' + multiple_stations+ '/' + liste_regions + '/' + meme_riviere,true );
     xhr.send();
 }
 </script>
